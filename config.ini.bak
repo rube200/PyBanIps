@@ -1,0 +1,16 @@
+[DataBase]
+connection=sqlite:///ban_ips.db
+max_detects=5
+max_addresses=32
+
+[Ssh]
+hostname=localhost
+port=22
+auth_method=login
+username=username
+password=password
+key_file=id_rsa
+passphrase=passphrase
+data_retriever_command=journalctl -g ddos -o short-iso -S '{date}'
+data_regex="(?P<date>[0-9-]{10}T[0-9:]{8}\\+[0-9]{4}).+SRC=(?P<src>[0-9.]{5,15}|[0-9a-fA-F:]{39}) DST=(?P<dst>[0-9.]{7,15}|[0-9a-fA-F:]{39})"
+data_date_format=
