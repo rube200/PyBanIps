@@ -1,4 +1,5 @@
 from datetime import datetime
+from ipaddress import IPv4Address
 from typing import Callable
 
 from applications.settings import Settings
@@ -14,6 +15,7 @@ class MainController:
         self.__add_address_db: Callable[[str], None | str] | None = None
         self.__add_address_ui: Callable[[AnalyseAddress], None] | None = None
         self.__add_network_ui: Callable[[BannedNetwork], None] | None = None
+        self.__bulk_add_addresses_db: Callable[[list[IPv4Address], datetime], None] | None = None
         self.__get_addresses_db: Callable[[], list[AnalyseAddress]] | None = None
         self.__get_networks_db: Callable[[], list[BannedNetwork]] | None = None
         self.__get_last_load_date: Callable[[], None | datetime] | None = None
@@ -35,6 +37,9 @@ class MainController:
 
     def set_add_network_ui_callback(self, callback: Callable[[BannedNetwork], None]) -> None:
         self.__add_network_ui = callback
+
+    def set_bulk_add_addresses_db_callback(self, callback: Callable[[list[IPv4Address], datetime], None]) -> None:
+        self.__bulk_add_addresses_db = callback
 
     def set_get_addresses_db_callback(self, callback: Callable[[], list[AnalyseAddress]]) -> None:
         self.__get_addresses_db = callback
@@ -71,6 +76,9 @@ class MainController:
 
     def add_network_ui(self, network: BannedNetwork) -> None:
         self.__add_network_ui(network)
+
+    def bulk_add_addresses_db(self, addresses: list[IPv4Address], last_log_date: datetime) -> None:
+        self.__bulk_add_addresses_db(addresses, last_log_date)
 
     def get_addresses_db(self) -> list[AnalyseAddress]:
         return self.__get_addresses_db()
