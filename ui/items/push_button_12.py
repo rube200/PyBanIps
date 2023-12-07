@@ -14,7 +14,7 @@ class PushButton12(QPushButton):
         super().__init__(text, parent)
 
         # noinspection PyUnresolvedReferences
-        self.clicked.connect(self.__button_presses)
+        self.clicked.connect(self.__button_pressed)
         self.__disable_ui = disable_ui
 
         font = self.font()
