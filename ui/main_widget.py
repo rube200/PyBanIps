@@ -1,5 +1,6 @@
 from PyQt6.QtCore import pyqtSlot as Slot
-from PyQt6.QtGui import QColor, QPalette
+from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QListWidget
 from PyQt6.QtWidgets import QVBoxLayout
@@ -53,9 +54,8 @@ class MainWidget(QWidget):
         self.address_input_info_label = Label12('', self, self.analyse_addresses_input_labels_layout, QColor('#FF0000'))
 
         # Create save button
-        self.address_input_button = PushButton12('Save', self, self.analyse_addresses_header)
-        # noinspection PyUnresolvedReferences
-        self.address_input_button.clicked.connect(self.__verify_and_save_input)
+        self.address_input_button = PushButton12('Save', self, self.analyse_addresses_header,
+                                                 self.__verify_and_save_input)
 
         # Create input form
         self.address_input_field = LineEdit12('IPV4 or IPV6', self, self.analyse_addresses_input_group_layout)
@@ -73,14 +73,10 @@ class MainWidget(QWidget):
         self.banned_networks_header.addWidget(self.banned_networks_label, 2)
 
         # Create save button
-        self.load_logs_button = PushButton12('Load logs', self, self.banned_networks_header)
-        # noinspection PyUnresolvedReferences
-        self.load_logs_button.clicked.connect(self.__load_logs)
+        self.load_logs_button = PushButton12('Load logs', self, self.banned_networks_header, self.__load_logs)
 
         # Create save button
-        self.write_logs_button = PushButton12('Write bans', self, self.banned_networks_header)
-        # noinspection PyUnresolvedReferences
-        self.write_logs_button.clicked.connect(self.__write_bans)
+        self.write_logs_button = PushButton12('Write bans', self, self.banned_networks_header, self.__write_bans)
 
         # Create banned networks list
         self.banned_networks_list = AddressNetworkList(self, self.banned_networks_layout)

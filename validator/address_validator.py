@@ -1,8 +1,10 @@
 from ipaddress import IPv4Address
 from ipaddress import IPv6Address
+from typing import Callable
+
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QValidator
-from typing import Callable
+
 from utils.ip_address_utils import IPvAddress
 
 
