@@ -13,3 +13,9 @@ class LastLogDate(DatabaseModelBase):
 
     lock: Mapped[str] = mapped_column(CHAR(1), CheckConstraint('lock=\'X\''), primary_key=True, server_default='X')
     last_load_date: Mapped[datetime] = mapped_column(nullable=False)
+
+    # noinspection PyTypeChecker
+    def __init__(self, last_load_date: datetime):
+        super().__init__()
+        self.lock = 'X'
+        self.last_load_date = last_load_date

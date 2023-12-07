@@ -1,10 +1,11 @@
-import logging
-from datetime import datetime
 from datetime import UTC
+from datetime import datetime
 from typing import Type
 from typing import TypeVar
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+
 from controllers.main_controller import MainController
 from models.address_network_base import AddressNetworkBase
 from models.analyse_address import AnalyseAddress
@@ -48,7 +49,7 @@ class DBController:
         return adb
 
     def _add_address_db(self, address: IPvAddress) -> AnalyseAddress:
-        analyse_address = AnalyseAddress(ip=address)
+        analyse_address = AnalyseAddress(address)
         return self._add_anb_to_db(analyse_address, self._cache_analyse_addresses)
 
     def _add_network_db(self, network: IPvNetwork) -> BannedNetwork:
@@ -195,7 +196,7 @@ class DBController:
 
             address_index = self._index_of_address(address)
             if address_index == -1:
-                analyse_address = AnalyseAddress(ip=address, count=1)
+                analyse_address = AnalyseAddress(address)
                 self._cache_analyse_addresses.append(analyse_address)
 
                 add_to_analyse.append(analyse_address)
