@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import UTC
 from os import path
 from re import Match
 
@@ -43,7 +44,6 @@ class SSHController:
     def _retrieve_ssh_data(self, date: datetime = None) -> (None | list[str], None | datetime):
         try:
             self._connect()
-
             if not date:
                 date = datetime(1970, 1, 1, 1)
 
@@ -51,7 +51,7 @@ class SSHController:
             settings = self.settings()
             data_retriever_cmd = settings.data_retriever_command.format_map(SafeFormatterDict(date=date))
             _, stdout, stderr = self._ssh_client.exec_command(data_retriever_cmd)
-            retrieve_date = datetime.now()
+            retrieve_date = datetime.now(UTC)
 
             output_data = stdout.read()
             error = stderr.read()
@@ -68,7 +68,7 @@ class SSHController:
         finally:
             self._ssh_client.close()
 
-    def __get_regex_date(self, match: Match, default: datetime = datetime.now()) -> None | datetime:
+    def __get_regex_date(self, match: Match, default: datetime = datetime.now(UTC)) -> None | datetime:
         if 'date' not in match.groupdict():
             return default
 
@@ -159,3 +159,7 @@ class SSHController:
 
         logs_data, retrieve_date = ssh_data
         result_addresses, most_recent_log_date = self._process_ssh_data(logs_data, retrieve_date, last_logs_date)
+        if not result_addresses:
+            return
+
+        self.__main_controller.bulk_add_addresses_db(result_addresses, most_recent_log_date)
