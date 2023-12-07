@@ -8,6 +8,8 @@ from paramiko.ssh_exception import AuthenticationException
 from controllers.main_controller import MainController
 from models.auth_methods import AuthMethods
 from policies.ssh_host_key_policy import SSHHostKeyPolicy
+from utils.ip_address_utils import IPvAddress
+from utils.ip_address_utils import ip_address
 from utils.safe_formatter_dict import SafeFormatterDict
 
 
@@ -73,7 +75,7 @@ class SSHController:
 
         date_raw = match.group('date')
         if not date_raw:
-            return default
+            return None
 
         try:
             # noinspection PyArgumentList
@@ -86,6 +88,61 @@ class SSHController:
         except ValueError:
             return None
 
+    @staticmethod
+    def __get_address_by_key(match: Match, key: str) -> IPvAddress:
+        if key not in match.groupdict():
+            return None
+
+        address_raw = match.group(key)
+        if not address_raw:
+            return None
+
+        address = ip_address(address_raw)
+        return address if not address.is_private else None
+
+    def __get_address(self, match: Match) -> IPvAddress:
+        address = self.__get_address_by_key(match, 'src')
+        if address:
+            return address
+
+        return self.__get_address_by_key(match, 'dst')
+
+    def _process_ssh_data(self, logs_data: list[str], retrieve_date: datetime, last_logs_date: datetime) -> (list[IPvAddress], datetime):
+        failed_matches: list[str] = []
+        failed_parse_address: list[str] = []
+        failed_parse_date: list[str] = []
+
+        addresses_to_report: list[IPvAddress] = []
+        most_recent_log_date = None
+
+        # noinspection PyArgumentList
+        regex = self.settings().data_regex
+
+        for log in logs_data:
+            log_match = regex.match(log)
+            if not log_match:
+                failed_matches.append(log)
+                continue
+
+            log_date = self.__get_regex_date(log_match, retrieve_date)
+            if not log_date:
+                failed_parse_date.append(log)
+            elif last_logs_date and last_logs_date >= log_date:
+                continue
+
+            log_address = self.__get_address(log_match)
+            if not log_address:
+                failed_parse_address.append(log)
+                continue
+
+            if not most_recent_log_date or log_date > most_recent_log_date:
+                most_recent_log_date = log_date
+
+            addresses_to_report.append(log_address)
+
+        # todo finish
+        return addresses_to_report, most_recent_log_date
+
     def load_logs(self) -> None:
         last_logs_date = self.__main_controller.get_last_load_date()
 
@@ -94,15 +151,4 @@ class SSHController:
             return
 
         logs_data, retrieve_date = ssh_data
-        # noinspection PyArgumentList
-        settings = self.settings()
-        for log in logs_data:
-            log_match = settings.data_regex.match(log)
-            if not log_match:
-                # todo add 1 warning
-                continue
-
-            log_date = self.__get_regex_date(log_match, retrieve_date)
-            if not log_date:
-                # todo add 1 warning
-                pass
+        result_addresses, most_recent_log_date = self._process_ssh_data(logs_data, retrieve_date, last_logs_date)

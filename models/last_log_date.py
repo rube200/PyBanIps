@@ -1,8 +1,8 @@
 from datetime import datetime
 
+from sqlalchemy import CHAR, CheckConstraint
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy import CHAR, CheckConstraint
 from sqlalchemy.sql.functions import now
 
 from models.database_mode_base import DatabaseModelBase
