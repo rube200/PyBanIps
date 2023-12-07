@@ -215,7 +215,7 @@ class DBController:
         return [i for i in cache_list if i not in adb_list]
 
     def refresh_cache(self) -> None:
-        with Session(self._db_engine) as session:
+        with Session(self._db_engine, expire_on_commit=False) as session:
             self._cache_analyse_addresses = session.query(AnalyseAddress).all()
             self._cache_banned_networks = session.query(BannedNetwork).all()
             session.commit()
