@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime
-from typing import TypeVar, Type
-
+from datetime import UTC
+from typing import Type
+from typing import TypeVar
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-
 from controllers.main_controller import MainController
 from models.address_network_base import AddressNetworkBase
 from models.analyse_address import AnalyseAddress
@@ -23,6 +23,7 @@ class DBController:
         self.settings = main_controller.get_settings
 
         self.__main_controller.set_add_address_db_callback(self.add_address)
+        self.__main_controller.set_bulk_add_addresses_db_callback(self.bulk_add_addresses)
         self.__main_controller.set_get_addresses_db_callback(self.get_addresses)
         self.__main_controller.set_get_networks_db_callback(self.get_networks)
         self.__main_controller.set_get_last_load_date_callback(self.get_last_load_date)
@@ -73,7 +74,7 @@ class DBController:
         max_addresses = self.settings().max_addresses
 
         for banned_network in self._cache_banned_networks:
-            if super_network.prefixlen >= banned_network.ip.prefixlen:
+            if banned_network.ip.version != super_network.version or super_network.prefixlen >= banned_network.ip.prefixlen:
                 continue
 
             if super_network.supernet_of(banned_network.ip):
@@ -179,8 +180,80 @@ class DBController:
 
         self._remove_sub_network(banned_network)
 
-    def add_bulk_addresses(self):
-        pass  # todo
+    def bulk_add_addresses(self, addresses: list[IPvAddress], last_log_date: datetime):  # todo try refactor
+        add_to_analyse: list[AnalyseAddress] = []
+        add_to_banned: list[BannedNetwork] = []
+
+        remove_from_analyse: list[AnalyseAddress] = []
+        remove_from_banned: list[BannedNetwork] = []
+
+        settings = self.settings()
+
+        for address in addresses:
+            if self._is_address_banned(address):
+                continue
+
+            address_index = self._index_of_address(address)
+            if address_index == -1:
+                analyse_address = AnalyseAddress(ip=address, count=1)
+                self._cache_analyse_addresses.append(analyse_address)
+
+                add_to_analyse.append(analyse_address)
+                continue
+
+            analyse_address = self._cache_analyse_addresses[address_index]
+            if analyse_address.count < settings.max_detects - 1:
+                analyse_address.count += 1
+                continue
+
+            network = self._create_network(address)
+            banned_network = BannedNetwork(ip=network)
+
+            self._cache_banned_networks.append(banned_network)
+            add_to_banned.append(banned_network)
+            if network.prefixlen == network.max_prefixlen:
+                self._cache_analyse_addresses.remove(analyse_address)
+                if analyse_address in add_to_analyse:
+                    add_to_analyse.remove(analyse_address)
+                continue
+
+            addresses_to_remove = self._get_sub_networks(banned_network, self._cache_analyse_addresses, False)
+            for address_to_remove in addresses_to_remove:
+                self._cache_analyse_addresses.remove(address_to_remove)
+                if address_to_remove in add_to_analyse:
+                    add_to_analyse.remove(address_to_remove)
+                else:
+                    remove_from_analyse.remove(address_to_remove)
+
+            networks_to_remove = self._get_sub_networks(banned_network, self._cache_banned_networks, True)
+            for network_to_remove in networks_to_remove:
+                self._cache_banned_networks.remove(network_to_remove)
+                if network_to_remove in add_to_banned:
+                    add_to_banned.remove(network_to_remove)
+                else:
+                    remove_from_banned.remove(network_to_remove)
+
+        remove_analyse_ips = [address.ip for address in remove_from_analyse]
+        remove_banned_ips = [network.ip for network in remove_from_banned]
+
+        with Session(self._db_engine, expire_on_commit=False) as session:
+            if add_to_analyse:
+                session.add_all(add_to_analyse)
+
+            if add_to_banned:
+                session.add_all(add_to_banned)
+
+            if remove_analyse_ips:
+                session.query(AnalyseAddress).where(AnalyseAddress.ip.in_(remove_analyse_ips)).delete()
+
+            if remove_banned_ips:
+                session.query(BannedNetwork).where(BannedNetwork.ip.in_(remove_banned_ips)).delete()
+
+            session.merge(LastLogDate(last_load_date=last_log_date))
+
+            session.commit()
+
+        self.__main_controller.load_data_to_ui()
 
     def get_addresses(self) -> list[AnalyseAddress]:
         return self._cache_analyse_addresses
@@ -192,7 +265,7 @@ class DBController:
         with Session(self._db_engine) as session:
             date = session.query(LastLogDate.last_load_date).one_or_none()
             session.commit()
-            return date[0] if date else date
+            return date[0].astimezone(UTC) if date else date
 
     def prepare_data(self) -> None:
         self.refresh_cache()
@@ -203,10 +276,10 @@ class DBController:
         if not adb_list:
             return cache_list
 
-        ids = [adb.ip for adb in adb_list]
+        ips = [adb.ip for adb in adb_list]
         with Session(self._db_engine) as session:
             # noinspection PyUnresolvedReferences
-            session.query(tp).where(tp.ip.in_(ids)).delete()
+            session.query(tp).where(tp.ip.in_(ips)).delete()
             session.commit()
 
         if cache_list is None:
