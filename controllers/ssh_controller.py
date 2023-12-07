@@ -34,7 +34,6 @@ class SSHController:
 
             case AuthMethods.KEY_FILE:
                 key_path = path.expanduser(settings.key_file)
-                print(key_path)
                 self._ssh_client.connect(settings.hostname, settings.port, settings.username, key_filename=key_path,
                                          passphrase=settings.passphrase)
 
@@ -119,9 +118,13 @@ class SSHController:
         regex = self.settings().data_regex
 
         for log in logs_data:
+            if not log:
+                continue
+
             log_match = regex.match(log)
             if not log_match:
-                failed_matches.append(log)
+                if not log.startswith('-- Boot ') or not log.endswith(' --'):
+                    failed_matches.append(log)
                 continue
 
             log_date = self.__get_regex_date(log_match, retrieve_date)
@@ -141,6 +144,10 @@ class SSHController:
             addresses_to_report.append(log_address)
 
         # todo finish
+        print(failed_matches)
+        print(failed_parse_address)
+        print(failed_parse_date)
+
         return addresses_to_report, most_recent_log_date
 
     def load_logs(self) -> None:
