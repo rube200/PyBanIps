@@ -16,7 +16,7 @@ DEFAULT_SSH_USERNAME = 'username'
 DEFAULT_SSH_PASSWORD = 'password'
 DEFAULT_SSH_KEY_FILE = 'id_rsa'
 DEFAULT_SSH_PASSPHRASE = 'passphrase'
-DEFAULT_SSH_DATA_RETRIEVER_COMMAND = 'journalctl -g ddos -o short-iso -S \'{date}\''
+DEFAULT_SSH_DATA_RETRIEVER_COMMAND = 'journalctl -g ddos -o short-iso -S \'{date:%Y-%m-%d %H:%M:%S}\''
 DEFAULT_SSH_DATA_REGEX = (r'(?P<date>[0-9-]{10}T[0-9:]{8}\+[0-9]{4}).+SRC=(?P<src>[0-9.]{5,15}|[0-9a-fA-F:]{39}) '
                           r'DST=(?P<dst>[0-9.]{7,15}|[0-9a-fA-F:]{39})')
 DEFAULT_SSH_DATA_DATE_FORMAT = ''
