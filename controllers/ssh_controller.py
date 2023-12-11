@@ -1,5 +1,5 @@
-from datetime import datetime
 from datetime import UTC
+from datetime import datetime
 from os import path
 from re import Match
 
@@ -20,6 +20,7 @@ class SSHController:
         self.settings = main_controller.get_settings
 
         self.__main_controller.set_load_logs_ssh_callback(self.load_logs)
+        self.__main_controller.set_write_bans_callback(self.write_bans)
 
         self._ssh_client = SSHClient()
         self._ssh_client.load_system_host_keys()
@@ -163,3 +164,27 @@ class SSHController:
             return
 
         self.__main_controller.bulk_add_addresses_db(result_addresses, most_recent_log_date)
+
+    def write_bans(self) -> None:
+        networks = self.__main_controller.get_networks_db()
+        if not networks:
+            return
+
+        try:
+            self._connect()
+
+            sftp = self._ssh_client.open_sftp()
+            settings = self.settings()
+            network_format = settings.format
+
+            with sftp.open(settings.file_v4, 'w') as ipv4_file, sftp.open(settings.file_v6, 'w') as ipv6_file:
+                for network in networks:
+                    network_ip = network.ip
+
+                    network_bytes = network_format.format(network=network_ip, address=network_ip.network_address, mask=network_ip.prefixlen).encode('utf-8')
+                    if network.ip.version == 6:
+                        ipv6_file.write(network_bytes)
+                    else:
+                        ipv4_file.write(network_bytes)
+        finally:
+            self._ssh_client.close()

@@ -117,7 +117,7 @@ class MainWidget(QWidget):
 
     @Slot()
     def __write_bans(self) -> None:
-        pass  # todo finish
+        self.__main_controller.write_bans_ssh()
 
     @staticmethod
     def _add_to_list(address: AddressNetworkBase, target_list: QListWidget) -> AddressNetworkItem:
@@ -166,12 +166,16 @@ class MainWidget(QWidget):
         self._clear_input()
         self._add_network_list(network)
 
-    def refresh_addresses(self, addresses: list[AddressNetworkBase]) -> None:
+    def refresh_addresses(self) -> None:
+        addresses = self.__main_controller.get_addresses_db()
+
         self.analyse_addresses_list.clear()
         for address in addresses:
             self._add_address_list(address)
 
-    def refresh_networks(self, networks: list[AddressNetworkBase]) -> None:
+    def refresh_networks(self) -> None:
+        networks = self.__main_controller.get_networks_db()
+
         self.banned_networks_list.clear()
         for network in networks:
             self._add_network_list(network)

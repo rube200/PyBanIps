@@ -22,9 +22,10 @@ class MainController:
         self.__load_logs_ssh: Callable[[], None] | None = None
         self.__prepare_data: Callable[[], None] | None = None
         self.__remove_address_ui: Callable[[AnalyseAddress], None] | None = None
-        self.__set_address_ui: Callable[[list[AnalyseAddress]], None] | None = None
-        self.__set_networks_ui: Callable[[list[BannedNetwork]], None] | None = None
+        self.__set_address_ui: Callable[[], None] | None = None
+        self.__set_networks_ui: Callable[[], None] | None = None
         self.__update_address_ui: Callable[[AnalyseAddress], None] | None = None
+        self.__write_bans_ssh: Callable[[], None] | None = None
 
     def get_settings(self) -> Settings:
         return self.__settings
@@ -59,14 +60,17 @@ class MainController:
     def set_remove_address_ui_callback(self, callback: Callable[[AnalyseAddress], None]) -> None:
         self.__remove_address_ui = callback
 
-    def set_set_addresses_ui_callback(self, callback: Callable[[list[AnalyseAddress]], None]) -> None:
+    def set_set_addresses_ui_callback(self, callback: Callable[[], None]) -> None:
         self.__set_address_ui = callback
 
-    def set_set_networks_ui_callback(self, callback: Callable[[list[BannedNetwork]], None]) -> None:
+    def set_set_networks_ui_callback(self, callback: Callable[[], None]) -> None:
         self.__set_networks_ui = callback
 
     def set_update_address_ui_callback(self, callback: Callable[[AnalyseAddress], None]) -> None:
         self.__update_address_ui = callback
+
+    def set_write_bans_callback(self, callback: Callable[[], None]) -> None:
+        self.__write_bans_ssh = callback
 
     def add_address_db(self, text: str) -> str:
         return self.__add_address_db(text)
@@ -90,11 +94,8 @@ class MainController:
         return self.__get_networks_db()
 
     def load_data_to_ui(self) -> None:
-        addresses = self.get_addresses_db()
-        self.set_addresses_ui(addresses)
-
-        networks = self.get_networks_db()
-        self.set_networks_ui(networks)
+        self.set_addresses_ui()
+        self.set_networks_ui()
 
     def load_logs_ssh(self) -> None:
         self.__load_logs_ssh()
@@ -105,11 +106,14 @@ class MainController:
     def remove_address_ui(self, address: AnalyseAddress) -> None:
         self.__remove_address_ui(address)
 
-    def set_addresses_ui(self, addresses: list[AnalyseAddress]) -> None:
-        return self.__set_address_ui(addresses)
+    def set_addresses_ui(self) -> None:
+        return self.__set_address_ui()
 
-    def set_networks_ui(self, networks: list[BannedNetwork]) -> None:
-        return self.__set_networks_ui(networks)
+    def set_networks_ui(self) -> None:
+        return self.__set_networks_ui()
 
     def update_address_ui(self, address: AnalyseAddress) -> None:
         self.__update_address_ui(address)
+
+    def write_bans_ssh(self) -> None:
+        self.__write_bans_ssh()
