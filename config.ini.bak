@@ -1,7 +1,9 @@
-[DataBase]
-connection=sqlite:///ban_ips.db
+[App]
 max_detects=5
 max_addresses=32
+
+[DataBase]
+connection=sqlite:///ban_ips.db
 
 [Ssh]
 hostname=localhost
@@ -11,6 +13,13 @@ username=username
 password=password
 key_file=id_rsa
 passphrase=passphrase
-data_retriever_command="journalctl -g ddos -o short-iso -S '{date:%Y-%m-%d %H:%M:%S}'"
+
+[RetrieveData]
+data_retriever_command=journalctl -g ddos -o short-iso -S '{date:%Y-%m-%d %H:%M:%S}'
 data_regex="(?P<date>[0-9-]{10}T[0-9:]{8}\\+[0-9]{4}).+SRC=(?P<src>[0-9.]{5,15}|[0-9a-fA-F:]{39}) DST=(?P<dst>[0-9.]{7,15}|[0-9a-fA-F:]{39})"
 data_date_format=
+
+[WriteBans]
+file_v4=/etc/iptables/ban_ips.v4
+file_v6=/etc/iptables/ban_ips.v6
+format={network}\n
