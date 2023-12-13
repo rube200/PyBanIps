@@ -73,6 +73,8 @@ class DBController:
     def _is_network_exceeded(self, super_network: IPvNetwork) -> bool:
         count = 1
         max_addresses = self.settings().max_addresses
+        if max_addresses < 5:
+            return False
 
         for banned_network in self._cache_banned_networks:
             if banned_network.ip.version != super_network.version or super_network.prefixlen >= banned_network.ip.prefixlen:
@@ -137,11 +139,11 @@ class DBController:
 
         match len(addresses_to_remove):
             case 0:
-                self.__main_controller.set_networks_ui(self._cache_banned_networks)
+                self.__main_controller.set_networks_ui()
 
             case 1:
                 self.__main_controller.remove_address_ui(addresses_to_remove.pop())
-                self.__main_controller.set_networks_ui(self._cache_banned_networks)
+                self.__main_controller.set_networks_ui()
 
             case _:
                 self.__main_controller.load_data_to_ui()
@@ -157,24 +159,31 @@ class DBController:
         if self._is_address_banned(address):
             return f'Address \'{address_raw}\' is already banned!'
 
-        address_index = self._index_of_address(address)
-        if address_index == -1:
-            analyse_address = self._add_address_db(address)
-            self.__main_controller.add_address_ui(analyse_address)
-            return None
-
-        analyse_address = self._cache_analyse_addresses[address_index]
-        # noinspection PyArgumentList
         settings = self.settings()
-        if analyse_address.count < settings.max_detects - 1:
-            self._increment_address_count(analyse_address)
-            self.__main_controller.update_address_ui(analyse_address)
-            return None
+        address_index = self._index_of_address(address)
+
+        match address_index:
+            case -1:
+                if settings.max_detects > 1:
+                    analyse_address = self._add_address_db(address)
+                    self.__main_controller.add_address_ui(analyse_address)
+                    return None
+                else:
+                    analyse_address = None
+
+            case _:
+                analyse_address = self._cache_analyse_addresses[address_index]
+                if analyse_address.count < settings.max_detects - 1:
+                    self._increment_address_count(analyse_address)
+                    self.__main_controller.update_address_ui(analyse_address)
+                    return None
 
         network = self._create_network(address)
         banned_network = self._add_network_db(network)
         if network.prefixlen == network.max_prefixlen:
-            self._remove_address_db(analyse_address)
+            if analyse_address:
+                self._remove_address_db(analyse_address)
+
             self.__main_controller.add_network_ui(banned_network)
             self.__main_controller.remove_address_ui(analyse_address)
             return

@@ -2,6 +2,7 @@ from datetime import datetime
 from ipaddress import IPv4Address
 from typing import Callable
 
+from applications.settings import DEFAULT_APP_MAX_DETECTS_TO_BAN
 from applications.settings import Settings
 from models.analyse_address import AnalyseAddress
 from models.banned_network import BannedNetwork
@@ -11,6 +12,13 @@ class MainController:
     def __init__(self, settings: Settings, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__settings = settings
+        if self.__settings.max_detects < 1:
+            self.__settings.max_detects = DEFAULT_APP_MAX_DETECTS_TO_BAN
+            # todo finish
+
+        if self.__settings.max_addresses < 5:
+            # todo finish
+            pass
 
         self.__add_address_db: Callable[[str], None | str] | None = None
         self.__add_address_ui: Callable[[AnalyseAddress], None] | None = None

@@ -23,3 +23,5 @@ data_date_format=
 file_v4=/etc/iptables/ban_ips.v4
 file_v6=/etc/iptables/ban_ips.v6
 format={network}\n
+refresh_after_write=true
+refresh_cmd=systemctl restart netfilter-persistent.service
