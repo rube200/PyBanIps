@@ -107,7 +107,8 @@ class SSHController:
 
         return self.__get_address_by_key(match, 'dst')
 
-    def _process_ssh_data(self, logs_data: list[str], retrieve_date: datetime, last_logs_date: datetime) -> (list[IPvAddress], datetime):
+    def _process_ssh_data(self, logs_data: list[str], retrieve_date: datetime, last_logs_date: datetime) -> (
+    list[IPvAddress], datetime):
         failed_matches: list[str] = []
         failed_parse_address: list[str] = []
         failed_parse_date: list[str] = []
@@ -160,6 +161,9 @@ class SSHController:
 
         logs_data, retrieve_date = ssh_data
         result_addresses, most_recent_log_date = self._process_ssh_data(logs_data, retrieve_date, last_logs_date)
+        print("result")
+        print(result_addresses)
+        # todo show msg
         if not result_addresses:
             return
 
@@ -181,10 +185,21 @@ class SSHController:
                 for network in networks:
                     network_ip = network.ip
 
-                    network_bytes = network_format.format(network=network_ip, address=network_ip.network_address, mask=network_ip.prefixlen).encode('utf-8')
+                    network_bytes = network_format.format(network=network_ip, address=network_ip.network_address,
+                                                          mask=network_ip.prefixlen).encode('utf-8')
                     if network.ip.version == 6:
                         ipv6_file.write(network_bytes)
                     else:
                         ipv4_file.write(network_bytes)
+
+            if settings.refresh_firewall:
+                _, _, stderr = self._ssh_client.exec_command(settings.refresh_firewall_cmd)
+                error = stderr.read()
+                if error:
+                    print(error)  # todo finish
+                    return None
+
+            # todo show msg
+
         finally:
             self._ssh_client.close()

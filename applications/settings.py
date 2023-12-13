@@ -26,6 +26,8 @@ DEFAULT_RETRIEVE_DATA_DATE_FORMAT = ''
 DEFAULT_WRITE_BANS_FILE_V4 = '/etc/iptables/ban_ips.v4'
 DEFAULT_WRITE_BANS_FILE_V6 = '/etc/iptables/ban_ips.v6'
 DEFAULT_WRITE_BANS_FORMAT = '{network}\n'
+DEFAULT_WRITE_REFRESH_AFTER_WRITE = True
+DEFAULT_WRITE_REFRESH_CMD = 'systemctl restart netfilter-persistent.service'
 
 
 class Settings(QSettings):
@@ -63,6 +65,8 @@ class Settings(QSettings):
         self.file_v4: str = self.value('file_v4', DEFAULT_WRITE_BANS_FILE_V4, str)
         self.file_v6: str = self.value('file_v6', DEFAULT_WRITE_BANS_FILE_V6, str)
         self.format: str = self.value('format', DEFAULT_WRITE_BANS_FORMAT, str)
+        self.refresh_firewall: bool = self.value('refresh_after_write', DEFAULT_WRITE_REFRESH_AFTER_WRITE, bool)
+        self.refresh_firewall_cmd: str = self.value('refresh_cmd', DEFAULT_WRITE_REFRESH_CMD, str)
         self.endGroup()
 
     def __check_or_generate_config(self) -> None:
@@ -111,4 +115,8 @@ class Settings(QSettings):
             self.setValue('file_v6', DEFAULT_WRITE_BANS_FILE_V6)
         if not self.contains('format'):
             self.setValue('format', DEFAULT_WRITE_BANS_FORMAT)
+        if not self.contains('refresh_after_write'):
+            self.setValue('refresh_after_write', DEFAULT_WRITE_REFRESH_AFTER_WRITE)
+        if not self.contains('refresh_cmd'):
+            self.setValue('refresh_cmd', DEFAULT_WRITE_REFRESH_CMD)
         self.endGroup()
