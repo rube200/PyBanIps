@@ -171,8 +171,8 @@ class SSHController:
 
     def write_bans(self) -> None:
         networks = self.__main_controller.get_networks_db()
-        if not networks:
-            return
+        if networks is None:
+            networks = []
 
         try:
             self._connect()
