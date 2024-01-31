@@ -24,7 +24,8 @@ class AddressNetworkItem(QListWidgetItem):
         super().__init__(str(address), parent=parent, type=QListWidgetItem.ItemType.UserType)
 
         self.ip = address.ip
-        self.setFlags(Qt.ItemFlag.NoItemFlags)
+        flags = Qt.ItemFlag
+        self.setFlags(flags.ItemIsSelectable | flags.ItemIsEnabled)
 
         font = self.font()
         font.setPointSize(12)
