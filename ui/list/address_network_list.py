@@ -1,6 +1,10 @@
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QListWidget, QWidget, QLayout, QMenu, QAbstractItemView
+from PyQt6.QtWidgets import QListWidget, QWidget, QLayout, QMenu, QAbstractItemView, QApplication
+
+from ui.list.address_network_item import AddressNetworkItem
+from utils.ip_address_utils import IPvAddress
+from utils.ip_network_utils import IPvNetwork
 
 
 class AddressNetworkList(QListWidget):
@@ -9,9 +13,15 @@ class AddressNetworkList(QListWidget):
 
         self.__context_menu = QMenu(self)
 
+        copy_action = QAction("&Copy", self)
+        # noinspection PyUnresolvedReferences
+        copy_action.triggered.connect(self.copy_selected)
+
         delete_action = QAction("&Delete", self)
         # noinspection PyUnresolvedReferences
-        delete_action.triggered.connect(self.delete_item)
+        delete_action.triggered.connect(self.delete_selected)
+
+        self.__context_menu.addAction(copy_action)
         self.__context_menu.addAction(delete_action)
 
         font = self.font()
@@ -35,7 +45,18 @@ class AddressNetworkList(QListWidget):
         global_pos = self.mapToGlobal(event)
         self.__context_menu.popup(global_pos)
 
-    def delete_item(self):
+    def copy_selected(self):
+        items_text = []
+        for item in self.selectedItems():
+            if not isinstance(item, AddressNetworkItem):
+                continue
+
+            ip = item.ip
+            items_text.append(str(ip.network_address if isinstance(ip, IPvNetwork) else ip))
+
+        QApplication.clipboard().setText("\n".join(items_text))
+
+    def delete_selected(self):
         pass
         # for item in self.selectedItems():
         # row = self.row(item)
