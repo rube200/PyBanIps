@@ -23,12 +23,12 @@ class DBController:
         self.__main_controller = main_controller
         self.settings = main_controller.get_settings
 
-        self.__main_controller.set_add_address_db_callback(self.add_address)
-        self.__main_controller.set_bulk_add_addresses_db_callback(self.bulk_add_addresses)
-        self.__main_controller.set_get_addresses_db_callback(self.get_addresses)
-        self.__main_controller.set_get_networks_db_callback(self.get_networks)
-        self.__main_controller.set_get_last_load_date_callback(self.get_last_load_date)
-        self.__main_controller.set_prepare_data_callback(self.prepare_data)
+        self.__main_controller.add_address_db = self.add_address
+        self.__main_controller.bulk_add_addresses_db.connect(self.bulk_add_addresses)
+        self.__main_controller.get_addresses_db = self.get_addresses
+        self.__main_controller.get_networks_db = self.get_networks
+        self.__main_controller.get_last_load_date = self.get_last_load_date
+        self.__main_controller.prepare_data.connect(self.prepare_data)
 
         self._cache_analyse_addresses: None | list[AnalyseAddress] = None
         self._cache_banned_networks: None | list[BannedNetwork] = None
@@ -77,7 +77,8 @@ class DBController:
             return False
 
         for banned_network in self._cache_banned_networks:
-            if banned_network.ip.version != super_network.version or super_network.prefixlen >= banned_network.ip.prefixlen:
+            if (banned_network.ip.version != super_network.version
+                    or super_network.prefixlen >= banned_network.ip.prefixlen):
                 continue
 
             if super_network.supernet_of(banned_network.ip):
@@ -139,11 +140,11 @@ class DBController:
 
         match len(addresses_to_remove):
             case 0:
-                self.__main_controller.set_networks_ui()
+                self.__main_controller.set_networks_ui.emit()
 
             case 1:
-                self.__main_controller.remove_address_ui(addresses_to_remove.pop())
-                self.__main_controller.set_networks_ui()
+                self.__main_controller.remove_address_ui.emit(addresses_to_remove.pop())
+                self.__main_controller.set_networks_ui.emit()
 
             case _:
                 self.__main_controller.load_data_to_ui()
@@ -166,7 +167,7 @@ class DBController:
             case -1:
                 if settings.max_detects > 1:
                     analyse_address = self._add_address_db(address)
-                    self.__main_controller.add_address_ui(analyse_address)
+                    self.__main_controller.add_address_ui.emit(analyse_address)
                     return None
                 else:
                     analyse_address = None
@@ -175,7 +176,7 @@ class DBController:
                 analyse_address = self._cache_analyse_addresses[address_index]
                 if analyse_address.count < settings.max_detects - 1:
                     self._increment_address_count(analyse_address)
-                    self.__main_controller.update_address_ui(analyse_address)
+                    self.__main_controller.update_address_ui.emit(analyse_address)
                     return None
 
         network = self._create_network(address)
@@ -184,8 +185,8 @@ class DBController:
             if analyse_address:
                 self._remove_address_db(analyse_address)
 
-            self.__main_controller.add_network_ui(banned_network)
-            self.__main_controller.remove_address_ui(analyse_address)
+            self.__main_controller.add_network_ui.emit(banned_network)
+            self.__main_controller.remove_address_ui.emit(analyse_address)
             return
 
         self._remove_sub_network(banned_network)

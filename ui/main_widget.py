@@ -22,12 +22,12 @@ class MainWidget(QWidget):
         self.__main_controller = main_controller
         self.settings = main_controller.get_settings
 
-        self.__main_controller.set_add_address_ui_callback(self.add_address)
-        self.__main_controller.set_add_network_ui_callback(self.add_network)
-        self.__main_controller.set_remove_address_ui_callback(self.remove_address)
-        self.__main_controller.set_set_addresses_ui_callback(self.refresh_addresses)
-        self.__main_controller.set_set_networks_ui_callback(self.refresh_networks)
-        self.__main_controller.set_update_address_ui_callback(self.update_address)
+        self.__main_controller.add_address_ui.connect(self.add_address)
+        self.__main_controller.add_network_ui.connect(self.add_network)
+        self.__main_controller.remove_address_ui.connect(self.remove_address)
+        self.__main_controller.set_address_ui.connect(self.refresh_addresses)
+        self.__main_controller.set_networks_ui.connect(self.refresh_networks)
+        self.__main_controller.update_address_ui.connect(self.update_address)
 
         self.container_layout = QHBoxLayout(self)
 
@@ -113,11 +113,11 @@ class MainWidget(QWidget):
 
     @Slot()
     def __load_logs(self) -> None:
-        self.__main_controller.load_logs_ssh()
+        self.__main_controller.load_logs_ssh.emit()
 
     @Slot()
     def __write_bans(self) -> None:
-        self.__main_controller.write_bans_ssh()
+        self.__main_controller.write_bans_ssh.emit()
 
     @staticmethod
     def _add_to_list(address: AddressNetworkBase, target_list: QListWidget) -> AddressNetworkItem:

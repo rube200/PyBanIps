@@ -9,18 +9,20 @@ from controllers.ssh_controller import SSHController
 from ui.main_window import MainWindow
 
 
-class MainApplication(MainController, QApplication):
+class MainApplication(QApplication):
     def __init__(self):
-        super().__init__(Settings(), argv)
+        super().__init__(argv)
+        self._main_controller = MainController(Settings())
+
         self.setApplicationDisplayName('Py Ban Ips')
 
-        self._db_controller = DBController(self)
-        self._ssh_controller = SSHController(self)
+        self._db_controller = DBController(self._main_controller)
+        self._ssh_controller = SSHController(self._main_controller)
 
-        self.window = MainWindow(self)
+        self.window = MainWindow(self._main_controller)
 
-        self.prepare_data()
-        self.load_data_to_ui()
+        self._main_controller.prepare_data.emit()
+        self._main_controller.load_data_to_ui()
 
     def show(self) -> None:
         self.window.show()

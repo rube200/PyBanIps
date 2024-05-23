@@ -19,8 +19,8 @@ class SSHController:
         self.__main_controller = main_controller
         self.settings = main_controller.get_settings
 
-        self.__main_controller.set_load_logs_ssh_callback(self.load_logs)
-        self.__main_controller.set_write_bans_callback(self.write_bans)
+        self.__main_controller.load_logs_ssh.connect(self.load_logs)
+        self.__main_controller.write_bans_ssh.connect(self.write_bans)
 
         self._ssh_client = SSHClient()
         self._ssh_client.load_system_host_keys()
@@ -108,7 +108,7 @@ class SSHController:
         return self.__get_address_by_key(match, 'dst')
 
     def _process_ssh_data(self, logs_data: list[str], retrieve_date: datetime, last_logs_date: datetime) -> (
-    list[IPvAddress], datetime):
+            list[IPvAddress], datetime):
         failed_matches: list[str] = []
         failed_parse_address: list[str] = []
         failed_parse_date: list[str] = []
@@ -154,20 +154,18 @@ class SSHController:
 
     def load_logs(self) -> None:
         last_logs_date = self.__main_controller.get_last_load_date()
-
         ssh_data = self._retrieve_ssh_data(last_logs_date)
         if not ssh_data:
             return
 
         logs_data, retrieve_date = ssh_data
         result_addresses, most_recent_log_date = self._process_ssh_data(logs_data, retrieve_date, last_logs_date)
-        print("result")
-        print(result_addresses)
+        print(f"Found {len(result_addresses)} addresses")
         # todo show msg
         if not result_addresses:
             return
 
-        self.__main_controller.bulk_add_addresses_db(result_addresses, most_recent_log_date)
+        self.__main_controller.bulk_add_addresses_db.emit(result_addresses, most_recent_log_date)
 
     def write_bans(self) -> None:
         networks = self.__main_controller.get_networks_db()
