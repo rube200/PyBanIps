@@ -192,7 +192,7 @@ class DBController:
         self._remove_sub_network(banned_network)
         return None
 
-    def bulk_add_addresses(self, addresses: list[IPvAddress], last_log_date: datetime):  # todo try refactor
+    def bulk_add_addresses(self, addresses: list[IPvAddress], last_log_date: datetime):
         add_to_analyse: list[AnalyseAddress] = []
         add_to_banned: list[BannedNetwork] = []
 
@@ -305,9 +305,18 @@ class DBController:
             self._cache_banned_networks = session.query(BannedNetwork).all()
             session.commit()
 
-    def verify_and_repair_data(self) -> None:  # todo adding check if address count is to high and needs to be banned
+    def verify_and_repair_data(self) -> None:
         addresses_to_remove: [AnalyseAddress] = []
         networks_to_remove: [BannedNetwork] = []
+
+        settings = self.settings()
+        for analyse_address in self._cache_analyse_addresses:
+            if analyse_address.count < settings.max_detects:
+                continue
+
+            network = self._create_network(analyse_address.ip)
+            self._add_network_db(network)
+            self._remove_address_db(analyse_address)
 
         for network in self._cache_banned_networks:
             data_to_remove = self._get_sub_networks(network, self._cache_analyse_addresses, False)
