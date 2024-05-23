@@ -187,9 +187,10 @@ class DBController:
 
             self.__main_controller.add_network_ui.emit(banned_network)
             self.__main_controller.remove_address_ui.emit(analyse_address)
-            return
+            return None
 
         self._remove_sub_network(banned_network)
+        return None
 
     def bulk_add_addresses(self, addresses: list[IPvAddress], last_log_date: datetime):  # todo try refactor
         add_to_analyse: list[AnalyseAddress] = []
