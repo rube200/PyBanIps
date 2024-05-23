@@ -21,3 +21,11 @@ class AnalyseAddress(AddressNetworkBase, DatabaseModelBase):
 
     def __repr__(self) -> str:
         return f'{self.ip!s} - {self.count!r}'
+
+    def __eq__(self, other: object) -> bool:
+        return super().__eq__(other)
+
+    def __ne__(self, other: object) -> bool:
+        return super().__ne__(other)
+
+
