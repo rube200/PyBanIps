@@ -57,13 +57,15 @@ class SSHController:
             output_data = stdout.read()
             error = stderr.read()
             if error:
-                print(error)  # todo finish
+                self.__main_controller.notifier_dialog.display_message(error, "Error while retrieve ssh data:",
+                                                                       "Error!")
                 return None
 
             return output_data.decode('utf-8').split('\n'), retrieve_date
 
         except Exception as ex:
-            print(ex)  # todo finish
+            self.__main_controller.notifier_dialog.display_message(ex, "Exception while retrieving ssh data:",
+                                                                   "Exception!")
             return None
 
         finally:

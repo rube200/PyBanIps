@@ -3,7 +3,6 @@ from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QListWidget, QWidget, QLayout, QMenu, QAbstractItemView, QApplication
 
 from ui.list.address_network_item import AddressNetworkItem
-from utils.ip_address_utils import IPvAddress
 from utils.ip_network_utils import IPvNetwork
 
 
@@ -52,6 +51,7 @@ class AddressNetworkList(QListWidget):
                 continue
 
             ip = item.ip
+            # noinspection PyUnresolvedReferences
             items_text.append(str(ip.network_address if isinstance(ip, IPvNetwork) else ip))
 
         QApplication.clipboard().setText("\n".join(items_text))

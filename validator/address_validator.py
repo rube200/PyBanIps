@@ -38,21 +38,6 @@ class AddressValidator(QValidator):
             self._feedback_cb and self._feedback_cb('Private addresses are not allowed!')
             return QValidator.State.Intermediate
 
-        if address.is_link_local:
-            print(f"link local address: {address}")
-
-        if address.is_loopback:
-            print(f"loopback address: {address}")
-
-        if address.is_multicast:
-            print(f"multicast address: {address}")
-
-        if address.is_reserved:
-            print(f"reserved address: {address}")
-
-        if address.is_unspecified:
-            print(f"unspecified address: {address}")
-
         return QValidator.State.Intermediate
 
     def _validate_ipv4(self, raw_add: str) -> QValidator.State:
@@ -97,15 +82,15 @@ class AddressValidator(QValidator):
 
         hex_set = frozenset('0123456789ABCDEFabcdef')
         for i in range(parts_len - 1 if ipv4_suffix else parts_len):
-            hextet = parts[i]
-            if not hextet:
+            hex_tet = parts[i]
+            if not hex_tet:
                 continue
 
-            if not hex_set.issuperset(hextet):
+            if not hex_set.issuperset(hex_tet):
                 return QValidator.State.Invalid
 
-            hextet_len = len(hextet)
-            if hextet_len > 4:
+            hex_tet_len = len(hex_tet)
+            if hex_tet_len > 4:
                 return QValidator.State.Invalid
 
         if ipv4_suffix:
