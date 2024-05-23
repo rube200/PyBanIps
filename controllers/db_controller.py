@@ -38,15 +38,15 @@ class DBController:
 
     T_ANB = TypeVar('T_ANB', bound=AddressNetworkBase)
 
-    def _add_anb_to_db(self, adb: T_ANB, cache_list: None | list[T_ANB]) -> T_ANB:
+    def _add_anb_to_db(self, anb: T_ANB, cache_list: None | list[T_ANB]) -> T_ANB:
         with Session(self._db_engine, expire_on_commit=False) as session:
-            session.add(adb)
+            session.add(anb)
             session.commit()
 
         if cache_list is not None:
-            cache_list.append(adb)
+            cache_list.append(anb)
 
-        return adb
+        return anb
 
     def _add_address_db(self, address: IPvAddress) -> AnalyseAddress:
         analyse_address = AnalyseAddress(address)
@@ -93,12 +93,12 @@ class DBController:
     def _get_sub_networks(network: BannedNetwork, cache_list: list[T_ANB], skip_equal: bool) -> list[T_ANB]:
         subnetwork_list = []
 
-        for adb in cache_list:
-            if skip_equal and adb == network:
+        for anb in cache_list:
+            if skip_equal and anb == network:
                 continue
 
-            if adb in network:
-                subnetwork_list.append(adb)
+            if anb in network:
+                subnetwork_list.append(anb)
 
         return subnetwork_list
 
@@ -133,9 +133,9 @@ class DBController:
         addresses_to_remove = self._get_sub_networks(ban_network, self._cache_analyse_addresses, False)
         networks_to_remove = self._get_sub_networks(ban_network, self._cache_banned_networks, True)
 
-        self._cache_analyse_addresses = self.remove_adb_in_bulk(AnalyseAddress, addresses_to_remove,
+        self._cache_analyse_addresses = self.remove_anb_in_bulk(AnalyseAddress, addresses_to_remove,
                                                                 self._cache_analyse_addresses)
-        self._cache_banned_networks = self.remove_adb_in_bulk(BannedNetwork, networks_to_remove,
+        self._cache_banned_networks = self.remove_anb_in_bulk(BannedNetwork, networks_to_remove,
                                                               self._cache_banned_networks)
 
         match len(addresses_to_remove):
@@ -283,12 +283,12 @@ class DBController:
         self.refresh_cache()
         self.verify_and_repair_data()
 
-    def remove_adb_in_bulk(self, tp: Type[T_ANB], adb_list: list[T_ANB], cache_list: None | list[T_ANB]
+    def remove_anb_in_bulk(self, tp: Type[T_ANB], anb_list: list[T_ANB], cache_list: None | list[T_ANB]
                            ) -> None | list[T_ANB]:
-        if not adb_list:
+        if not anb_list:
             return cache_list
 
-        ips = [adb.ip for adb in adb_list]
+        ips = [anb.ip for anb in anb_list]
         with Session(self._db_engine) as session:
             # noinspection PyUnresolvedReferences
             session.query(tp).where(tp.ip.in_(ips)).delete()
@@ -297,7 +297,7 @@ class DBController:
         if cache_list is None:
             return cache_list
 
-        return [i for i in cache_list if i not in adb_list]
+        return [i for i in cache_list if i not in anb_list]
 
     def refresh_cache(self) -> None:
         with Session(self._db_engine, expire_on_commit=False) as session:
@@ -316,7 +316,7 @@ class DBController:
             data_to_remove = self._get_sub_networks(network, self._cache_banned_networks, True)
             networks_to_remove.extend(data_to_remove)
 
-        self._cache_analyse_addresses = self.remove_adb_in_bulk(AnalyseAddress, addresses_to_remove,
+        self._cache_analyse_addresses = self.remove_anb_in_bulk(AnalyseAddress, addresses_to_remove,
                                                                 self._cache_analyse_addresses)
-        self._cache_banned_networks = self.remove_adb_in_bulk(BannedNetwork, networks_to_remove,
+        self._cache_banned_networks = self.remove_anb_in_bulk(BannedNetwork, networks_to_remove,
                                                               self._cache_banned_networks)
