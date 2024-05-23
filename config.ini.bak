@@ -8,8 +8,10 @@ connection=sqlite:///ban_ips.db
 [Ssh]
 hostname=localhost
 port=22
+#Options: login, key_file
 auth_method=login
 username=username
+#Password is ignored if set to key_file
 password=password
 key_file=id_rsa
 passphrase=passphrase
@@ -17,6 +19,7 @@ passphrase=passphrase
 [RetrieveData]
 data_retriever_command=journalctl -g ddos -o short-iso -S '{date:%Y-%m-%d %H:%M:%S}'
 data_regex="(?P<date>[0-9-]{10}T[0-9:]{8}\\+[0-9]{4}).+SRC=(?P<src>[0-9.]{5,15}|[0-9a-fA-F:]{39}) DST=(?P<dst>[0-9.]{7,15}|[0-9a-fA-F:]{39})"
+#If not set uses fromisoformat
 data_date_format=
 
 [WriteBans]
