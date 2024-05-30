@@ -1,5 +1,8 @@
+import encodings.utf_8
+import os
 from datetime import UTC
 from datetime import datetime
+from encodings import utf_8
 from os import path
 from re import Match
 
@@ -57,15 +60,15 @@ class SSHController:
             output_data = stdout.read()
             error = stderr.read()
             if error:
-                self.__main_controller.notifier_dialog.display_message(error, "Error while retrieve ssh data:",
-                                                                       "Error!")
+                self.__main_controller.notifier_dialog.display_message(error, 'Error while retrieve ssh data:',
+                                                                       'Error!')
                 return None
 
-            return output_data.decode('utf-8').split('\n'), retrieve_date
+            return output_data.decode(utf_8.getregentry().name).split(os.linesep), retrieve_date
 
         except Exception as ex:
-            self.__main_controller.notifier_dialog.display_message(ex, "Exception while retrieving ssh data:",
-                                                                   "Exception!")
+            self.__main_controller.notifier_dialog.display_message(ex, 'Exception while retrieving ssh data:',
+                                                                   'Exception!')
             return None
 
         finally:
@@ -127,7 +130,7 @@ class SSHController:
 
             log_match = regex.match(log)
             if not log_match:
-                if not log.startswith('-- Boot ') or not log.endswith(' --'):
+                if not log.endswith(' --'):
                     failed_matches.append(log)
                 continue
 
@@ -147,10 +150,10 @@ class SSHController:
 
             addresses_to_report.append(log_address)
 
-        # todo finish
-        print(failed_matches)
-        print(failed_parse_address)
-        print(failed_parse_date)
+        if failed_matches or failed_parse_address or failed_parse_date:
+            self.__main_controller.notifier_dialog.display_message(
+                f'Failed matches: {len(failed_matches)}{os.linesep}Failed addresses: {len(failed_parse_address)}{os.linesep}Failed dates: {len(failed_parse_date)}',
+                'Fail to parse some log entries:', 'Warning')
 
         return addresses_to_report, most_recent_log_date
 
@@ -162,11 +165,12 @@ class SSHController:
 
         logs_data, retrieve_date = ssh_data
         result_addresses, most_recent_log_date = self._process_ssh_data(logs_data, retrieve_date, last_logs_date)
-        print(f"Found {len(result_addresses)} addresses")
-        # todo show msg
         if not result_addresses:
+            self.__main_controller.notifier_dialog.display_message('No entries found in remote host', 'Status:',
+                                                                   'No data found!')
             return
 
+        print(f'[SSHController] Found {len(result_addresses)} addresses, the last entry was at {most_recent_log_date}')
         self.__main_controller.bulk_add_addresses_db.emit(result_addresses, most_recent_log_date)
 
     def write_bans(self) -> None:
@@ -196,10 +200,15 @@ class SSHController:
                 _, _, stderr = self._ssh_client.exec_command(settings.refresh_firewall_cmd)
                 error = stderr.read()
                 if error:
-                    print(error)  # todo finish
-                    return None
+                    self.__main_controller.notifier_dialog.display_message(error, 'Error while writing ban list:',
+                                                                           'Error!')
+                    return
 
-            # todo show msg
+            if networks:
+                self.__main_controller.notifier_dialog.display_message('Ban list wrote with success', 'Status:', 'Info')
+            else:
+                self.__main_controller.notifier_dialog.display_message('Ban list cleared with success', 'Status:',
+                                                                       'Info')
 
         finally:
             self._ssh_client.close()

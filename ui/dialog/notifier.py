@@ -21,8 +21,8 @@ class Notifier(QDialog):
         self.button_box.accepted.connect(self.accept)
         self.button_box.setCenterButtons(True)
 
-    def display_message(self, msg: object, header: str, title: str = "Info") -> None:
-        print(f"[{title}] {header} {msg}")
+    def display_message(self, msg: object, header: str, title: str = 'Info') -> None:
+        print(f'[{title}] {header} {msg}')
 
         if title and title is not self.windowTitle():
             self.setWindowTitle(title)
@@ -35,5 +35,5 @@ class Notifier(QDialog):
         if msg:
             self.message_label.setText(msg if isinstance(msg, str) else str(msg))
         else:
-            self.message_label.setText("-")
+            self.message_label.setText('-')
         self.exec()

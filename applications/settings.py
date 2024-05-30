@@ -1,3 +1,4 @@
+import os
 from re import Pattern
 from re import compile
 
@@ -25,7 +26,7 @@ DEFAULT_RETRIEVE_DATA_DATE_FORMAT = ''
 
 DEFAULT_WRITE_BANS_FILE_V4 = '/etc/iptables/ban_ips.v4'
 DEFAULT_WRITE_BANS_FILE_V6 = '/etc/iptables/ban_ips.v6'
-DEFAULT_WRITE_BANS_FORMAT = '{network}\n'
+DEFAULT_WRITE_BANS_FORMAT = f'{{network}}{os.linesep}'
 DEFAULT_WRITE_REFRESH_AFTER_WRITE = True
 DEFAULT_WRITE_REFRESH_CMD = 'sudo systemctl restart netfilter-persistent.service'
 

@@ -27,5 +27,3 @@ class AnalyseAddress(AddressNetworkBase, DatabaseModelBase):
 
     def __ne__(self, other: object) -> bool:
         return super().__ne__(other)
-
-

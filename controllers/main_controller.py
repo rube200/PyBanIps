@@ -3,7 +3,7 @@ from typing import Callable
 
 from PyQt6.QtCore import pyqtSignal, QObject
 
-from applications.settings import DEFAULT_APP_MAX_DETECTS_TO_BAN
+from applications.settings import DEFAULT_APP_MAX_DETECTS_TO_BAN, DEFAULT_APP_MAX_ADDRESS_TO_CLUSTER
 from applications.settings import Settings
 from models.analyse_address import AnalyseAddress
 from models.banned_network import BannedNetwork
@@ -33,12 +33,14 @@ class MainController(QObject):
 
         self.__settings = settings
         if self.__settings.max_detects < 1:
+            print(
+                f'[MainController] Max detects is to low({self.__settings.max_detects}) using default value{DEFAULT_APP_MAX_DETECTS_TO_BAN}.')
             self.__settings.max_detects = DEFAULT_APP_MAX_DETECTS_TO_BAN
-            # todo finish
 
         if self.__settings.max_addresses < 5:
-            # todo finish
-            pass
+            print(
+                f'[MainController] Max addresses is to low({self.__settings.max_addresses}) using default value{DEFAULT_APP_MAX_ADDRESS_TO_CLUSTER}.')
+            self.__settings.max_addresses = DEFAULT_APP_MAX_ADDRESS_TO_CLUSTER
 
     def get_settings(self) -> Settings:
         return self.__settings
