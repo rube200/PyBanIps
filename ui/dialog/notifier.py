@@ -1,3 +1,5 @@
+import os
+
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
 
 from ui.items.label_12 import Label12
@@ -33,7 +35,7 @@ class Notifier(QDialog):
             self.header_label.setText(title)
 
         if msg:
-            self.message_label.setText(msg if isinstance(msg, str) else str(msg))
+            self.message_label.setText(msg.lstrip(os.linesep) if isinstance(msg, str) else str(msg))
         else:
             self.message_label.setText('-')
         self.exec()

@@ -1,4 +1,3 @@
-import encodings.utf_8
 import os
 from datetime import UTC
 from datetime import datetime
@@ -64,10 +63,11 @@ class SSHController:
                                                                        'Error!')
                 return None
 
-            return output_data.decode(utf_8.getregentry().name).split(os.linesep), retrieve_date
+            # todo maybe split os.linesep could cause problems in some systems
+            return output_data.decode(utf_8.getregentry().name).strip(os.linesep).split(os.linesep), retrieve_date
 
         except Exception as ex:
-            self.__main_controller.notifier_dialog.display_message(ex, 'Exception while retrieving ssh data:',
+            self.__main_controller.notifier_dialog.display_message(ex, 'Exception while retrieving data via ssh:',
                                                                    'Exception!')
             return None
 
@@ -130,7 +130,7 @@ class SSHController:
 
             log_match = regex.match(log)
             if not log_match:
-                if not log.endswith(' --'):
+                if not log.startswith('-- ') or not log.endswith(' --'):
                     failed_matches.append(log)
                 continue
 
@@ -152,8 +152,11 @@ class SSHController:
 
         if failed_matches or failed_parse_address or failed_parse_date:
             self.__main_controller.notifier_dialog.display_message(
-                f'Failed matches: {len(failed_matches)}{os.linesep}Failed addresses: {len(failed_parse_address)}{os.linesep}Failed dates: {len(failed_parse_date)}',
-                'Fail to parse some log entries:', 'Warning')
+                f'{os.linesep}Failed matches: {len(failed_matches)}{os.linesep}Failed addresses: {len(failed_parse_address)}{os.linesep}Failed dates: {len(failed_parse_date)}',
+                f'Fail to parse some log entries:', 'Warning')
+            print(failed_matches)
+            print(failed_parse_address)
+            print(failed_parse_date)
 
         return addresses_to_report, most_recent_log_date
 
@@ -165,6 +168,7 @@ class SSHController:
 
         logs_data, retrieve_date = ssh_data
         result_addresses, most_recent_log_date = self._process_ssh_data(logs_data, retrieve_date, last_logs_date)
+
         if not result_addresses:
             self.__main_controller.notifier_dialog.display_message('No entries found in remote host', 'Status:',
                                                                    'No data found!')
@@ -209,6 +213,9 @@ class SSHController:
             else:
                 self.__main_controller.notifier_dialog.display_message('Ban list cleared with success', 'Status:',
                                                                        'Info')
+        except Exception as ex:
+            self.__main_controller.notifier_dialog.display_message(ex, 'Exception while writing data via ssh:',
+                                                                   'Exception!')
 
         finally:
             self._ssh_client.close()
